@@ -14,10 +14,16 @@ headers = {
 }
 
 
-def make_description(x):
-    description_text = f'<p>{x}  под заказ из Европы.</p> <p>Магазины Musicstore, Thomann и Promusictools.</p> <p>Доставка занимает от 2-3 недели с момента отправки, по срокам нужно уточнять дополнительно, может меняться в зависимости от наличия.</p> <p>🚛 Oтпpaвлю по всeй Poccии.</p> <p>✅ Так же можете выбpaть любую дpугую гитаpу, электрогитару, акустическую гитару, усилители, головы, кофр или кейс под заказ, даже если ее нет в моих объявлениях, просто напишите полное название, я рассчитаю стоимость в ближайшее время с учетом доставки.</p> <p>✔ ГAРAHTИЯ НА ТOВАР</p> <p>📨 Пишите</p> <p>📞 Звоните</p> <p>👨‍🔧Без выходных</p>'
+def make_description(item_title):
+    with open('description_text.txt', 'r', encoding='utf-8-sig') as file:
+        for i in file:
+            description_text=i.replace('item_title', item_title)
     return description_text
 
+
+with open('title_text.txt', 'r', encoding='utf-8-sig') as file:
+    for i in file:
+        title_text = i
 
 def get_links():
     """
@@ -63,6 +69,7 @@ def get_info():
             time.sleep(1)
             title = browser.find_element(By.CSS_SELECTOR, 'h1').text
             description = make_description(title)
+            title = title_text+' '+browser.find_element(By.CSS_SELECTOR, 'h1').text
             features = browser.find_element(By.CSS_SELECTOR, 'div.feature-box').find_elements(By.TAG_NAME, 'li')
             for feature in features:
                 description += '\n' + feature.text
@@ -91,7 +98,13 @@ def get_info():
             yotube_request='https://www.youtube.com/results?search_query='+title.replace(' ','+').replace('&','%26')
             browser.get(yotube_request)
             time.sleep(1)
-            video_youtube_link=browser.find_element(By.ID, 'video-title').get_attribute('href')
+            video_youtube_link=''
+            video_youtube_links=browser.find_elements(By.ID, 'video-title')
+            for youtube_link in video_youtube_links:
+                youtube_link_title=youtube_link.text
+                if title.lower() in youtube_link_title.lower():
+                    video_youtube_link=youtube_link.get_attribute('href')
+                    break
             sheet.cell(column=3, row=row).value = article
             sheet.cell(column=4, row=row).value = video_youtube_link
             sheet.cell(column=5, row=row).value = price
